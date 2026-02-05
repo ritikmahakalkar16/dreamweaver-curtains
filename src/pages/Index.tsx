@@ -1,13 +1,29 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { motion } from 'framer-motion';
+import Navigation from '@/components/layout/Navigation';
+import HeroSection from '@/components/sections/HeroSection';
+import ExperienceSection from '@/components/sections/ExperienceSection';
+import MaterialShowcase from '@/components/sections/MaterialShowcase';
+import CraftsmanshipSection from '@/components/sections/CraftsmanshipSection';
+import ContactSection from '@/components/sections/ContactSection';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="relative min-h-screen bg-background overflow-x-hidden smooth-scroll"
+    >
+      {/* Fixed grain overlay */}
+      <div className="fixed inset-0 grain z-50 pointer-events-none" />
+      
+      <Navigation />
+      <HeroSection />
+      <ExperienceSection />
+      <MaterialShowcase />
+      <CraftsmanshipSection />
+      <ContactSection />
+    </motion.div>
   );
 };
 
