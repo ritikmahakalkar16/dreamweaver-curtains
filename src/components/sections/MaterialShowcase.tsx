@@ -35,6 +35,7 @@
  const MaterialShowcase = () => {
    const containerRef = useRef<HTMLElement>(null);
    const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
    
    const { scrollYProgress } = useScroll({
      target: containerRef,
@@ -42,9 +43,40 @@
    });
  
    const x = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
+  
+  const handleMouseMove = (e: React.MouseEvent, id: number) => {
+    if (hoveredId !== id) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePosition({
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    });
+  };
  
    return (
      <section ref={containerRef} id="collections" className="relative py-32 overflow-hidden">
+      {/* Animated background grid */}
+      <div className="absolute inset-0 overflow-hidden opacity-20">
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(hsl(38 65% 55% / 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(38 65% 55% / 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px',
+          }}
+          animate={{
+            backgroundPosition: ['0px 0px', '60px 60px'],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+      </div>
+      
        <div className="container mx-auto px-6">
          <motion.div
            initial={{ opacity: 0, y: 40 }}
@@ -53,9 +85,13 @@
            viewport={{ once: true }}
            className="text-center mb-20"
          >
-           <p className="text-primary text-sm tracking-widest uppercase font-body mb-4">
+          <motion.p 
+            className="text-primary text-sm tracking-widest uppercase font-body mb-4"
+            animate={{ letterSpacing: ['0.2em', '0.3em', '0.2em'] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          >
              Our Collections
-           </p>
+          </motion.p>
            <h2 className="font-display text-4xl md:text-6xl font-light">
              Curated <span className="italic text-gradient-gold">Excellence</span>
            </h2>
@@ -71,6 +107,7 @@
                viewport={{ once: true }}
                onHoverStart={() => setHoveredId(material.id)}
                onHoverEnd={() => setHoveredId(null)}
+              onMouseMove={(e) => handleMouseMove(e, material.id)}
                className="group relative aspect-[4/3] cursor-pointer overflow-hidden"
              >
                {/* Animated Background */}
@@ -82,22 +119,31 @@
                  transition={{ duration: 0.7 }}
                />
                
+              {/* 3D perspective effect based on mouse position */}
+              <motion.div
+                className="absolute inset-0"
+                style={{
+                  background: `radial-gradient(circle at ${mousePosition.x * 100}% ${mousePosition.y * 100}%, transparent 0%, rgba(0,0,0,0.4) 100%)`,
+                }}
+              />
+              
                {/* Shimmer Effect */}
                <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                
                {/* Animated curtain folds */}
                <div className="absolute inset-0 opacity-30">
-                 {[...Array(5)].map((_, i) => (
+                {[...Array(8)].map((_, i) => (
                    <motion.div
                      key={i}
-                     className="absolute h-full w-8 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                     style={{ left: `${i * 25}%` }}
+                    className="absolute h-full w-6 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                    style={{ left: `${i * 12.5}%` }}
                      animate={{
-                       x: hoveredId === material.id ? [0, 20, 0] : 0,
+                      x: hoveredId === material.id ? [0, 30, 0] : 0,
                        opacity: hoveredId === material.id ? [0.1, 0.3, 0.1] : 0.1,
+                      scaleY: hoveredId === material.id ? [1, 1.05, 1] : 1,
                      }}
                      transition={{
-                       duration: 3,
+                      duration: 2,
                        delay: i * 0.2,
                        repeat: Infinity,
                      }}
@@ -114,9 +160,16 @@
                    }}
                    transition={{ duration: 0.4 }}
                  >
-                   <h3 className="font-display text-3xl md:text-4xl text-white mb-2">
+                  <motion.h3 
+                    className="font-display text-3xl md:text-4xl text-white mb-2"
+                    animate={{
+                      textShadow: hoveredId === material.id 
+                        ? '0 0 30px rgba(255,255,255,0.3)' 
+                        : '0 0 0px transparent',
+                    }}
+                  >
                      {material.name}
-                   </h3>
+                  </motion.h3>
                    <p className="font-body font-light text-white/70 max-w-xs">
                      {material.description}
                    </p>
@@ -125,7 +178,7 @@
                      initial={{ width: 0 }}
                      animate={{ width: hoveredId === material.id ? '100%' : 0 }}
                      transition={{ duration: 0.5 }}
-                     className="h-px bg-white/50 mt-4"
+                    className="h-px bg-gradient-to-r from-white/80 to-transparent mt-4"
                    />
                    
                    <motion.button
@@ -151,10 +204,26 @@
                  className="absolute inset-0 border border-primary/0 group-hover:border-primary/30 transition-colors duration-500"
                  animate={{
                    boxShadow: hoveredId === material.id 
-                     ? 'inset 0 0 60px hsl(38 65% 55% / 0.1)' 
+                    ? 'inset 0 0 80px hsl(38 65% 55% / 0.15), 0 0 40px hsl(38 65% 55% / 0.1)' 
                      : 'inset 0 0 0px transparent',
                  }}
                />
+              
+              {/* Corner indicators */}
+              <motion.div
+                className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/0 group-hover:border-white/30 transition-colors duration-500"
+                animate={{
+                  scale: hoveredId === material.id ? [1, 1.1, 1] : 1,
+                }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+              <motion.div
+                className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/0 group-hover:border-white/30 transition-colors duration-500"
+                animate={{
+                  scale: hoveredId === material.id ? [1, 1.1, 1] : 1,
+                }}
+                transition={{ duration: 1, repeat: Infinity, delay: 0.5 }}
+              />
              </motion.div>
            ))}
          </div>
